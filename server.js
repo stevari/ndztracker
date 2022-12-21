@@ -37,7 +37,7 @@ async function getDrones() {
 
 }
 
-function insideNDZcircle(droneObject){
+function insideNDZcircle(drone){
 /*
 The NDZ is a circle whose center is at (x_c, y_z),
 where x_c = 250000.0 and y_c = 2500000.0 and has a radius r of 100m.
@@ -51,15 +51,38 @@ d < r
 and on the circle when
 d = r.
 
+source:
+https://math.stackexchange.com/questions/198764/how-to-know-if-a-point-is-inside-a-circle
+
 This function return true if the drone is inside or on the circle.
 */
+let r = 100000.0;
+let x_c = 250000.0;
+let y_c =250000.0;
+
+
+let y_p = parseFloat(drone.positionY);
+let x_p = parseFloat(drone.positionX);
+
+let d = Math.sqrt( Math.pow((x_p - x_c),2) + Math.pow((y_p - y_c),2) );
+
+console.log(d);
+return ((d<=r)); //point is inside or on the circle if d < r or d == r
 
 }
  function main(){
-  var drones =getDrones();
+  //var drones =getDrones();
 
   setTimeout(function(){ //wait until getDrones() has done it's job. 
-    console.log(drones);
+    //console.log(drones);
+    console.log("new drone: positionY:194244.4541807699, positionX:446781.79552944534, not inside NDZ.  ");
+    const drone = {
+      serialNumber: 'SN-Eljpgp0ZDd',
+      positionY: '194244.4541807699',
+      positionX: '446781.79552944534'
+    }
+    console.log(insideNDZcircle(drone));
+    
   },700)
   
 }
