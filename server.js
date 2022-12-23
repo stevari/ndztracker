@@ -1,13 +1,14 @@
 import axios from 'axios';
 import xml2js from "xml2js";
-
-async function getDrones() { 
+const dronePositionsURL = 'https://assignments.reaktor.com/birdnest/drones'; //URL for drone positions data
+const pilotInfoBaseURL = 'https://assignments.reaktor.com/birdnest/pilots/'; //base URL for "national drone registry endpoint" to fecth pilot info using drone's serial no.
+ function getDrones() { 
   //this function retrieves xml data from a source, parses the xml into json and creates objects from json
   //then returns a list of these created objects
 
   var parser = new xml2js.Parser(); //init xml to json parser
   const droneList = []; //init empty list of drones
-  axios.get('https://assignments.reaktor.com/birdnest/drones').then(res =>{ //retrieve xml data from source
+  axios.get(dronePositionsURL).then(res =>{ //retrieve xml data from source
     parser.parseString(res.data,function(err,result){ //parse to json
     
      var captureObject = result.report.capture;  //json to object
@@ -32,7 +33,7 @@ async function getDrones() {
   }); //axios.get()
   
   return droneList;
-
+  
 }
 
 function insideNDZcircle(drone){
@@ -68,9 +69,22 @@ let d = Math.sqrt( Math.pow((x_p - x_c),2) + Math.pow((y_p - y_c),2) );
 return ((d<=r)); //point is inside or on the circle if d < r or d == r
 
 }
- async function main(){
+
+function getPilotInfoFrom (drone){
+  //This function fetches pilot information from a pre-determined URL using a drone's serial number
+  const serialNumber = drone.serialNumber;
+  const url = pilotInfoBaseURL+serialNumber;
+    axios
+  .get(url)
+  .then(res => {
+    console.log(res.data);
+    
+  })
+}
+
+  function getViolatingDrones(){
   var drones =[];
-  drones = await getDrones();
+  drones = getDrones();
 
   const violatingDronesList =[];
 
@@ -78,17 +92,35 @@ return ((d<=r)); //point is inside or on the circle if d < r or d == r
     //console.log(drones);
     //Loop through get drones -list and check each drone if they are violating the NDZ.
     drones.forEach(drone =>{
-      console.log(`new drone, serialnumber: ${drone.serialNumber}, positionY:${drone.positionY}, positionX:${drone.positionX}`);
+      //console.log(`new drone, serialnumber: ${drone.serialNumber}, positionY:${drone.positionY}, positionX:${drone.positionX}`);
        //if a drone is violating the NDZ, add it to violators list to be later matched with their owner
       if(insideNDZcircle(drone)){ 
       violatingDronesList.push(drone);
+      
     }
     });
+    //console.log(violatingDronesList);
+    //return violatingDronesList;
     
-   
-    //test end
-    console.log(violatingDronesList);
-  },700)
+  },300)
+  
+  return violatingDronesList;
+}
+
+function main(){
+  var violatingDrones =[];
+  violatingDrones = getViolatingDrones();
+
+  setTimeout(() => {
+    violatingDrones.forEach(violator => {
+      getPilotInfoFrom(violator);
+      console.log(violator);
+      
+    })
+  }, 600);
+  
+  
+  
   
 }
 
