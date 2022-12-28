@@ -8,29 +8,35 @@ const pilotInfoBaseURL = 'https://assignments.reaktor.com/birdnest/pilots/'; //b
 
   var parser = new xml2js.Parser(); //init xml to json parser
   const droneList = []; //init empty list of drones
-  axios.get(dronePositionsURL).then(res =>{ //retrieve xml data from source
-    parser.parseString(res.data,function(err,result){ //parse to json
+  try {
+    axios.get(dronePositionsURL).then(res =>{ //retrieve xml data from source
+      parser.parseString(res.data,function(err,result){ //parse to json
+      
+       var captureObject = result.report.capture;  //json to object
+       Object.values(captureObject).forEach(value =>{ //iterate to find drone data
+        Object.values(value.drone).forEach(drone => {
+  
+          let droneObject = { //create a new drone object using retrieved data
+            serialNumber:drone.serialNumber.toString(), //serial number to match owner
+            positionY:drone.positionY.toString(), //positions as coordinates 
+            positionX:drone.positionX.toString()
+          };
+          //console.log(droneObject)
+  
+          droneList.push(droneObject); 
+          
+        });
+       });
+  
+      }); //pearser.parseString()
+      //console.log(droneList);
+      
+    }); //axios.get()
     
-     var captureObject = result.report.capture;  //json to object
-     Object.values(captureObject).forEach(value =>{ //iterate to find drone data
-      Object.values(value.drone).forEach(drone => {
-
-        let droneObject = { //create a new drone object using retrieved data
-          serialNumber:drone.serialNumber.toString(), //serial number to match owner
-          positionY:drone.positionY.toString(), //positions as coordinates 
-          positionX:drone.positionX.toString()
-        };
-        //console.log(droneObject)
-
-        droneList.push(droneObject); 
-        
-      });
-     });
-
-    }); //pearser.parseString()
-    //console.log(droneList);
+  } catch (error) {
+    console.log(error);
     
-  }); //axios.get()
+  }
   
   return droneList;
   
@@ -74,12 +80,22 @@ function getPilotInfoFrom (drone){
   //This function fetches pilot information from a pre-determined URL using a drone's serial number
   const serialNumber = drone.serialNumber;
   const url = pilotInfoBaseURL+serialNumber;
+  try {
     axios
-  .get(url)
-  .then(res => {
-    console.log(res.data);
+    .get(url)
+    .then(res => {
+      //console.log(res.data);
+      console.log(`Violator's full name: ${res.data.firstName} ${res.data.lastName}`);
+        console.log(`Email address: ${res.data.email}`);
+        console.log(`Phone number: ${res.data.phoneNumber}`);
+        console.log('--------------------------------------');
+      
+    })
+  } catch (error) {
+    console.log(error);
     
-  })
+  }
+
 }
 
   function getViolatingDrones(){
@@ -102,7 +118,7 @@ function getPilotInfoFrom (drone){
     //console.log(violatingDronesList);
     //return violatingDronesList;
     
-  },300)
+  },400)
   
   return violatingDronesList;
 }
@@ -113,11 +129,9 @@ function main(){
 
   setTimeout(() => {
     violatingDrones.forEach(violator => {
-      getPilotInfoFrom(violator);
-      console.log(violator);
-      
+      var violator = getPilotInfoFrom(violator);  
     })
-  }, 600);
+  }, 800);
   
   
   
