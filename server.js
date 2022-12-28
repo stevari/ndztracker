@@ -1,5 +1,8 @@
 import axios from 'axios';
 import xml2js from "xml2js";
+import express from 'express';
+
+
 const dronePositionsURL = 'https://assignments.reaktor.com/birdnest/drones'; //URL for drone positions data
 const pilotInfoBaseURL = 'https://assignments.reaktor.com/birdnest/pilots/'; //base URL for "national drone registry endpoint" to fecth pilot info using drone's serial no.
  function getDrones() { 
@@ -138,4 +141,14 @@ function main(){
   
 }
 
-main();
+//main();
+
+const PORT = 3001; //port for the web server
+const app = express(); //using express library to make the server
+//NOTE TO SELF: npm run dev to use nodemon
+app.get("/",(req,res) =>{
+  res.send("<h1>Moi maailma</h1>");
+})
+
+app.listen(PORT);
+console.log(`Server running on port ${PORT}`);
