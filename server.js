@@ -149,7 +149,7 @@ app.get("/drones",(req,res) => {
   let drones = [];
   drones = getDrones();
   setTimeout(() => {
-    res.json(drones);
+    res.json({"drones":drones});
   }, 400);
 })
 
