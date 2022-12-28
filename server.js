@@ -5,6 +5,7 @@ import express from 'express';
 
 const dronePositionsURL = 'https://assignments.reaktor.com/birdnest/drones'; //URL for drone positions data
 const pilotInfoBaseURL = 'https://assignments.reaktor.com/birdnest/pilots/'; //base URL for "national drone registry endpoint" to fecth pilot info using drone's serial no.
+const violatingPilots = [];
  function getDrones() { 
   //this function retrieves xml data from a source, parses the xml into json and creates objects from json
   //then returns a list of these created objects
@@ -88,11 +89,19 @@ function getPilotInfoFrom (drone){
     .get(url)
     .then(res => {
       //console.log(res.data);
-      console.log(`Violator's full name: ${res.data.firstName} ${res.data.lastName}`);
-        console.log(`Email address: ${res.data.email}`);
-        console.log(`Phone number: ${res.data.phoneNumber}`);
-        console.log('--------------------------------------');
-      
+        //console.log(`Violator's full name: ${res.data.firstName} ${res.data.lastName}`);
+        //console.log(`Email address: ${res.data.email}`);
+        //console.log(`Phone number: ${res.data.phoneNumber}`);
+        //console.log('--------------------------------------');
+        let pilot = {
+          name:res.data.firstName.toString() +" " +res.data.lastName.toString(),
+          email:res.data.email.toString(),
+          phoneNumber:res.data.phoneNumber.toString()
+        }
+        if(pilot != null){
+          violatingPilots.push(pilot);
+        }
+        
     })
   } catch (error) {
     console.log(error);
@@ -115,6 +124,7 @@ function getPilotInfoFrom (drone){
        //if a drone is violating the NDZ, add it to violators list to be later matched with their owner
       if(insideNDZcircle(drone)){ 
       violatingDronesList.push(drone);
+      violatingPilots.push(getPilotInfoFrom(drone));
       
     }
     });
@@ -126,29 +136,34 @@ function getPilotInfoFrom (drone){
   return violatingDronesList;
 }
 
-function main(){
-  var violatingDrones =[];
-  violatingDrones = getViolatingDrones();
-
-  setTimeout(() => {
-    violatingDrones.forEach(violator => {
-      var violator = getPilotInfoFrom(violator);  
-    })
-  }, 800);
-  
-  
-  
-  
-}
-
-//main();
-
 const PORT = 3001; //port for the web server
 const app = express(); //using express library to make the server
 //NOTE TO SELF: npm run dev to use nodemon
-app.get("/",(req,res) =>{
+//Idea is to make RESTful web server
+
+app.get("/",(req,res) => {
   res.send("<h1>Moi maailma</h1>");
 })
 
+app.get("/drones",(req,res) => {
+  let drones = [];
+  drones = getDrones();
+  setTimeout(() => {
+    res.json(drones);
+  }, 400);
+})
+
+app.get('/violatingdrones',(req,res) => {
+  let violatingDrones = [];
+  violatingDrones = getViolatingDrones();
+  setTimeout(() => {
+    res.json(violatingDrones);
+  }, 400);
+})
+
+app.get('/pilots',(req,res) => {
+  console.log(violatingPilots);
+  res.json(violatingPilots);
+})
 app.listen(PORT);
 console.log(`Server running on port ${PORT}`);
