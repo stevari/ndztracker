@@ -98,7 +98,7 @@ function getPilotInfoFrom (drone){
           email:res.data.email.toString(),
           phoneNumber:res.data.phoneNumber.toString()
         }
-        if(pilot != null){
+        if(pilot != null && pilot !== "undefined"){
           violatingPilots.push(pilot);
         }
         
@@ -124,7 +124,7 @@ function getPilotInfoFrom (drone){
        //if a drone is violating the NDZ, add it to violators list to be later matched with their owner
       if(insideNDZcircle(drone)){ 
       violatingDronesList.push(drone);
-      violatingPilots.push(getPilotInfoFrom(drone));
+      getPilotInfoFrom(drone);
       
     }
     });
@@ -150,7 +150,7 @@ app.get("/api/drones",(req,res) => {
   drones = getDrones();
   setTimeout(() => {
     res.json({"drones":drones});
-  }, 400);
+  }, 500);
 })
 
 app.get('/api/violatingdrones',(req,res) => {
@@ -158,7 +158,7 @@ app.get('/api/violatingdrones',(req,res) => {
   violatingDrones = getViolatingDrones();
   setTimeout(() => {
     res.json({"violatingDrones":violatingDrones});
-  }, 400);
+  }, 700);
 })
 
 app.get('/api/pilots',(req,res) => {
