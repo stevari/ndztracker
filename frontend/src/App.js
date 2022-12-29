@@ -1,36 +1,29 @@
 import React from 'react'
-import { useState,useEffect } from 'react'
+
+import DisplayAll from './components/DisplayAll'
+import DisplayPilots from './components/DisplayPilots'
+import DisplayViolatingDrones from './components/DisplayViolatingDrones'
 
 
 
 export default function App() {
-  const [backendData,setBackendData] = useState([{}])
+
   //NOTETOSELF remember to start server before launch
-  useEffect(() => {
-    fetch("/drones")
-    .then(
-      response => response.json() 
-    )
-    .then(
-      data => {
-        setBackendData(data)
-      }
-    )
-  },[])
 
   return (
     <div>
-      {(typeof backendData.drones ==='undefined') ? (
-        <p>loading...</p>
-      ):(
-        backendData.drones.map(drone => (
-          <div key={drone.serialNumber}>
-            <p>{`drone serial number: ${drone.serialNumber} 
-                positionY: ${drone.positionY}
-                positionX: ${drone.positionX}`}</p>
-          </div>
-        ))
-      )}
+      <h1>
+        All drones listed:
+      </h1>
+        <DisplayAll/>
+      <h1>
+        Violating drones listed:
+      </h1>
+        <DisplayViolatingDrones/>
+        <h1>
+          Violating pilots:
+        </h1>
+        <DisplayPilots/>
     </div>
   )
 }
