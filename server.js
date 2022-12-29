@@ -136,16 +136,16 @@ function getPilotInfoFrom (drone){
   return violatingDronesList;
 }
 
-const PORT = 3001; //port for the web server
+const PORT = process.env.PORT || 3001; //port for the web server
 const app = express(); //using express library to make the server
 //NOTE TO SELF: npm run dev to use nodemon
 //Idea is to make RESTful web server
 
-app.get("/",(req,res) => {
+app.get("/api",(req,res) => {
   res.send("<h1>Moi maailma</h1>");
 })
 
-app.get("/drones",(req,res) => {
+app.get("/api/drones",(req,res) => {
   let drones = [];
   drones = getDrones();
   setTimeout(() => {
@@ -153,17 +153,17 @@ app.get("/drones",(req,res) => {
   }, 400);
 })
 
-app.get('/violatingdrones',(req,res) => {
+app.get('/api/violatingdrones',(req,res) => {
   let violatingDrones = [];
   violatingDrones = getViolatingDrones();
   setTimeout(() => {
-    res.json(violatingDrones);
+    res.json({"violatingDrones":violatingDrones});
   }, 400);
 })
 
-app.get('/pilots',(req,res) => {
+app.get('/api/pilots',(req,res) => {
   console.log(violatingPilots);
-  res.json(violatingPilots);
+  res.json({"violatingPilots":violatingPilots});
 })
 app.listen(PORT);
 console.log(`Server running on port ${PORT}`);
