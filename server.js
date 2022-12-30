@@ -5,13 +5,17 @@ import express from 'express';
 
 const dronePositionsURL = 'https://assignments.reaktor.com/birdnest/drones'; //URL for drone positions data
 const pilotInfoBaseURL = 'https://assignments.reaktor.com/birdnest/pilots/'; //base URL for "national drone registry endpoint" to fecth pilot info using drone's serial no.
-const violatingPilots = [];
+
+const drones = []; //list of all the drones from the most recent snapshot
+const violatingDrones = []; //list of drones that violate the NDZ
+const violatingPilots = []; //list of piolts that own drones that violate the NDZ
+
  function getDrones() { 
   //this function retrieves xml data from a source, parses the xml into json and creates objects from json
   //then returns a list of these created objects
 
   var parser = new xml2js.Parser(); //init xml to json parser
-  const droneList = []; //init empty list of drones
+
   try {
     axios.get(dronePositionsURL).then(res =>{ //retrieve xml data from source
       parser.parseString(res.data,function(err,result){ //parse to json
@@ -26,9 +30,16 @@ const violatingPilots = [];
             positionX:drone.positionX.toString()
           };
           //console.log(droneObject)
-  
-          droneList.push(droneObject); 
-          
+
+          /*Avoiding duplicates in the list by checking if a drone exists in the drones list already by using its serial number.
+            if it does, update the object's values (coordinates) instead of adding it to the list, otherwise, add to list
+          */
+          if(foundDuplicate(drones,droneObject)){ 
+            //console.log('duplicate!');
+            updateValues(drones,droneObject);
+          }else{
+            drones.push(droneObject); 
+          }
         });
        });
   
@@ -42,8 +53,18 @@ const violatingPilots = [];
     
   }
   
-  return droneList;
-  
+}
+
+function foundDuplicate(dronelist,droneobj){
+  return (dronelist.some(d => d.serialNumber === droneobj.serialNumber))
+}
+
+function updateValues(dronelist,droneobj){
+  dronelist.forEach((drone, index) => {
+    if(drone.serialNumber === droneobj.serialNumber) {
+        dronelist[index] = droneobj;
+    }
+});
 }
 
 function insideNDZcircle(drone){
@@ -98,8 +119,11 @@ function getPilotInfoFrom (drone){
           email:res.data.email.toString(),
           phoneNumber:res.data.phoneNumber.toString()
         }
-        if(pilot != null && pilot !== "undefined"){
-          violatingPilots.push(pilot);
+        if(pilot != null && pilot !== "undefined"){ 
+          if(!violatingPilots.some(p => p.name === pilot.name)){ //avoiding duplicates
+            violatingPilots.push(pilot);
+          }
+          
         }
         
     })
@@ -111,29 +135,26 @@ function getPilotInfoFrom (drone){
 }
 
   function getViolatingDrones(){
-  var drones =[];
-  drones = getDrones();
-
-  const violatingDronesList =[];
-
-  setTimeout(function(){ //wait until getDrones() has done it's job. 
-    //console.log(drones);
     //Loop through get drones -list and check each drone if they are violating the NDZ.
-    drones.forEach(drone =>{
-      //console.log(`new drone, serialnumber: ${drone.serialNumber}, positionY:${drone.positionY}, positionX:${drone.positionX}`);
-       //if a drone is violating the NDZ, add it to violators list to be later matched with their owner
-      if(insideNDZcircle(drone)){ 
-      violatingDronesList.push(drone);
-      getPilotInfoFrom(drone);
+    try {
+      drones.forEach(drone =>{
+        if(insideNDZcircle(drone)){
+          if(foundDuplicate(violatingDrones,drone)){ 
+            //console.log('duplicate!');
+            updateValues(violatingDrones,drone);
+            getPilotInfoFrom(drone);
+          }else{
+            violatingDrones.push(drone); 
+            getPilotInfoFrom(drone);
+          } 
+      }
+      });
+      
+    } catch (error) {
+      console.log('err'+error);
       
     }
-    });
-    //console.log(violatingDronesList);
-    //return violatingDronesList;
     
-  },400)
-  
-  return violatingDronesList;
 }
 
 const PORT = process.env.PORT || 3001; //port for the web server
@@ -146,16 +167,14 @@ app.get("/api",(req,res) => {
 })
 
 app.get("/api/drones",(req,res) => {
-  let drones = [];
-  drones = getDrones();
+  getDrones();
   setTimeout(() => {
     res.json({"drones":drones});
   }, 500);
 })
 
 app.get('/api/violatingdrones',(req,res) => {
-  let violatingDrones = [];
-  violatingDrones = getViolatingDrones();
+  getViolatingDrones();
   setTimeout(() => {
     res.json({"violatingDrones":violatingDrones});
   }, 700);
