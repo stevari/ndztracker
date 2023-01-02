@@ -2,6 +2,7 @@ import axios from 'axios';
 import xml2js from "xml2js";
 import express from 'express';
 import path from 'path';
+import cors from 'cors';
 import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -168,7 +169,10 @@ const app = express(); //using express library to make the server
 //NOTE TO SELF: npm run dev to use nodemon
 //Idea is to make RESTful web server
 app.use(express.static(path.resolve(__dirname, 'frontend/build'))); //serve frontend static files
-
+app.use(
+    cors({
+        origin:"*"})
+        );
 app.get("/api",(req,res) => {
   res.send("<h1>Moi maailma</h1>");
 })
