@@ -169,10 +169,7 @@ const app = express(); //using express library to make the server
 //NOTE TO SELF: npm run dev to use nodemon
 //Idea is to make RESTful web server
 app.use(express.static(path.resolve(__dirname, 'frontend/build'))); //serve frontend static files
-app.use(
-    cors({
-        origin:"*"})
-        );
+app.use(cors());
 app.get("/api",(req,res) => {
   res.send("<h1>Moi maailma</h1>");
 })
