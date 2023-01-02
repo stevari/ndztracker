@@ -21,7 +21,7 @@ export default function DisplayPilots() {
         <p>loading...</p>
       ):(
         pilotData.violatingPilots.filter(pilot => pilot != null).map(pilot => (
-          <div key={pilot.pilotId}>
+          <div key={pilot.name}>
             <p>{`
                 name: ${pilot.name}
                 phone number: ${pilot.phoneNumber}

@@ -7,7 +7,7 @@ export default function DisplayAll() { //retrieves all drones from the latest sn
     useEffect(() => {
         fetch("api/drones")
         .then(
-          response => response.json() 
+          response => response.json() //Handle errors!
         )
         .then(
           data => {
