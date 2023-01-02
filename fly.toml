@@ -1,11 +1,12 @@
-# fly.toml file generated for ndztracker on 2023-01-02T18:20:33+02:00
+# fly.toml file generated for ndztrackerapp on 2023-01-02T18:51:46+02:00
 
-app = "ndztracker"
+app = "ndztrackerapp"
 kill_signal = "SIGINT"
 kill_timeout = 5
 processes = []
 
 [env]
+  PORT = "8080"
 
 [experimental]
   allowed_public_ports = []

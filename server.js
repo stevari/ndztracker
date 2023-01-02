@@ -164,7 +164,7 @@ function getPilotInfoFrom (drone){
     
 }
 
-const PORT = process.env.PORT || 3001; //port for the web server
+const PORT = process.env.PORT || "8080"; //port for the web server
 const app = express(); //using express library to make the server
 //NOTE TO SELF: npm run dev to use nodemon
 //Idea is to make RESTful web server
