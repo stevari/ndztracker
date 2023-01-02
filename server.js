@@ -1,6 +1,10 @@
 import axios from 'axios';
 import xml2js from "xml2js";
 import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 
 const dronePositionsURL = 'https://assignments.reaktor.com/birdnest/drones'; //URL for drone positions data
@@ -120,7 +124,10 @@ function getPilotInfoFrom (drone){
           phoneNumber:res.data.phoneNumber.toString()
         }
         if(pilot != null && pilot !== "undefined"){ 
-          if(!violatingPilots.some(p => p.name === pilot.name)){ //avoiding duplicates
+          if(violatingPilots.some(p => p.name === pilot.name)){ //avoiding duplicates
+            console.log('duplicate pilot!');
+            
+          }else{
             violatingPilots.push(pilot);
           }
           
@@ -142,7 +149,6 @@ function getPilotInfoFrom (drone){
           if(foundDuplicate(violatingDrones,drone)){ 
             //console.log('duplicate!');
             updateValues(violatingDrones,drone);
-            getPilotInfoFrom(drone);
           }else{
             violatingDrones.push(drone); 
             getPilotInfoFrom(drone);
@@ -161,6 +167,7 @@ const PORT = process.env.PORT || 3001; //port for the web server
 const app = express(); //using express library to make the server
 //NOTE TO SELF: npm run dev to use nodemon
 //Idea is to make RESTful web server
+app.use(express.static(path.resolve(__dirname, 'frontend/build'))); //serve frontend static files
 
 app.get("/api",(req,res) => {
   res.send("<h1>Moi maailma</h1>");
@@ -184,5 +191,12 @@ app.get('/api/pilots',(req,res) => {
   console.log(violatingPilots);
   res.json({"violatingPilots":violatingPilots});
 })
+
+app.get('*',(req,res) => {
+  //console.log(__dirname);
+  //any requests wihout /api will be served with front end page
+  res.sendFile(path.resolve(__dirname,'frontend/build','index.html'));
+})
+
 app.listen(PORT);
 console.log(`Server running on port ${PORT}`);
