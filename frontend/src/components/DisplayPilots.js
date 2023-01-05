@@ -16,12 +16,17 @@ export default function DisplayPilots() {
         )
       },[])
   return (
-    <div style={{textAlign:"center"}}>
-      <h2>
+    <div style={{padding:1,borderStyle:"solid"}}>
+      <h2 style={{textAlign:"center",backgroundColor:"#072a58"}}>
           Violating pilots:
         </h2>
+    
+    
+
+    <div style={{textAlign:"center",overflowY:"scroll",height:"91vh"}}>
+      
       <div>
-      {(typeof pilotData.violatingPilots ==='undefined') ? (
+      {(typeof pilotData.violatingPilots ==='undefined'||pilotData.violatingPilots.length<1) ? (
         <SpinnerLoading/>
       ):(
         pilotData.violatingPilots.filter(pilot => pilot != null).map(pilot => (
@@ -33,13 +38,14 @@ export default function DisplayPilots() {
               <br/>
               {`Email address: ${pilot.email}`}
               <br/>
-              {`Drone's distance from nest: ${pilot.distance}`}
+              {`Drone's distance from nest: ${pilot.distance} meters`}
                 </p>
           </div>
         ))
       )}
       </div>
 
+    </div>
     </div>
   )
 }
