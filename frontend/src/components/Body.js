@@ -1,24 +1,17 @@
 import React from 'react'
-
-import DisplayAll from "./DisplayAll"
+import { useEffect } from 'react'
 import DisplayPilots from "./DisplayPilots"
-import DisplayViolatingDrones from './DisplayViolatingDrones'
-
+//get and display only pilot data
 export default function Body
 () {
+  useEffect(() => {
+    fetch("api/drones")
+    .then(
+      fetch("api/violatingdrones")
+    )
+  },[])
   return (
-    <div>
-        <h2>
-        All drones listed:
-      </h2>
-        <DisplayAll/>
-      <h2>
-        Violating drones listed:
-      </h2>
-        <DisplayViolatingDrones/>
-        <h2>
-          Violating pilots:
-        </h2>
+    <div style={{height:"100vh"}}>
         <DisplayPilots/>
     </div>
   )
