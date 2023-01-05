@@ -121,7 +121,7 @@ function getPilotInfoFrom (drone){
           name:res.data.firstName.toString() +" " +res.data.lastName.toString(),
           email:res.data.email.toString(),
           phoneNumber:res.data.phoneNumber.toString(),
-          distance:calculateDistanceFromNest(drone)
+          distance:(calculateDistanceFromNest(drone)/1000)
         }
       
         if(pilot != null && pilot !== "undefined"){ 
