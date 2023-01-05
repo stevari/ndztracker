@@ -72,6 +72,15 @@ function updateValues(dronelist,droneobj){
 });
 }
 
+function calculateDistanceFromNest(drone){
+  let x_c = 250000.0; // point (250 000, 250 000) is where the nest is located 
+  let y_c =250000.0;
+  
+  let y_p = parseFloat(drone.positionY); //drone's coordinates
+  let x_p = parseFloat(drone.positionX);
+
+  return Math.round(Math.sqrt( Math.pow((x_p - x_c),2) + Math.pow((y_p - y_c),2) ),0);
+}
 function insideNDZcircle(drone){
 /*
 The NDZ is a circle whose center is at (x_c, y_z),
@@ -92,14 +101,8 @@ https://math.stackexchange.com/questions/198764/how-to-know-if-a-point-is-inside
 This function return true if the drone is inside or on the circle.
 */
 let r = 100000.0;
-let x_c = 250000.0;
-let y_c =250000.0;
 
-
-let y_p = parseFloat(drone.positionY);
-let x_p = parseFloat(drone.positionX);
-
-let d = Math.sqrt( Math.pow((x_p - x_c),2) + Math.pow((y_p - y_c),2) );
+let d = calculateDistanceFromNest(drone);
 
 //console.log(d);
 return ((d<=r)); //point is inside or on the circle if d < r or d == r
@@ -114,16 +117,13 @@ function getPilotInfoFrom (drone){
     axios
     .get(url)
     .then(res => {
-      //console.log(res.data);
-        //console.log(`Violator's full name: ${res.data.firstName} ${res.data.lastName}`);
-        //console.log(`Email address: ${res.data.email}`);
-        //console.log(`Phone number: ${res.data.phoneNumber}`);
-        //console.log('--------------------------------------');
         let pilot = {
           name:res.data.firstName.toString() +" " +res.data.lastName.toString(),
           email:res.data.email.toString(),
-          phoneNumber:res.data.phoneNumber.toString()
+          phoneNumber:res.data.phoneNumber.toString(),
+          distance:calculateDistanceFromNest(drone)
         }
+      
         if(pilot != null && pilot !== "undefined"){ 
           if(violatingPilots.some(p => p.name === pilot.name)){ //avoiding duplicates
             console.log('duplicate pilot!');
@@ -189,8 +189,11 @@ app.get('/api/violatingdrones',(req,res) => {
 })
 
 app.get('/api/pilots',(req,res) => {
-  console.log(violatingPilots);
-  res.json({"violatingPilots":violatingPilots});
+  //console.log(violatingPilots);
+  setTimeout(() => {
+    res.json({"violatingPilots":violatingPilots});
+  }, 1000);
+  
 })
 
 app.get('*',(req,res) => {
