@@ -39,6 +39,8 @@ export default function DisplayPilots() {
               {`Email address: ${pilot.email}`}
               <br/>
               {`Drone's distance from nest: ${pilot.distance} meters`}
+              <br/>
+              {`Time of violation: ${pilot.violationTime} `}
                 </p>
           </div>
         ))
