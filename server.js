@@ -161,6 +161,7 @@ function getPilotInfoFrom (drone){
           if(foundDuplicate(violatingDrones,drone)){ 
             //console.log('duplicate!');
             updateValues(violatingDrones,drone);
+            getPilotInfoFrom(drone);
           }else{
             violatingDrones.push(drone); 
             getPilotInfoFrom(drone);
