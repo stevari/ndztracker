@@ -27,12 +27,14 @@ const violatingPilots = []; //list of piolts that own drones that violate the ND
       
        var captureObject = result.report.capture;  //json to object
        Object.values(captureObject).forEach(value =>{ //iterate to find drone data
+        let timestamp = (value.$.snapshotTimestamp); //timestamp, e.g 2023-01-06T14:37:54.057Z
         Object.values(value.drone).forEach(drone => {
   
           let droneObject = { //create a new drone object using retrieved data
             serialNumber:drone.serialNumber.toString(), //serial number to match owner
             positionY:drone.positionY.toString(), //positions as coordinates 
-            positionX:drone.positionX.toString()
+            positionX:drone.positionX.toString(),
+            timestamp: timestamp
           };
           //console.log(droneObject)
 
@@ -60,16 +62,23 @@ const violatingPilots = []; //list of piolts that own drones that violate the ND
   
 }
 
-function foundDuplicate(dronelist,droneobj){
+function foundDuplicate(dronelist,droneobj){ //returns true if an object exists in the given list, false if not
   return (dronelist.some(d => d.serialNumber === droneobj.serialNumber))
 }
 
-function updateValues(dronelist,droneobj){
+function updateValues(dronelist,droneobj){ //iterates the given dronelist, finds the drone we are looking for using it's serial number and finally, updates the drone object's data (position)
   dronelist.forEach((drone, index) => {
     if(drone.serialNumber === droneobj.serialNumber) {
         dronelist[index] = droneobj;
     }
 });
+}
+function updatePilotList(pilotobj){ //same idea as the above function, but now updating pilot info
+  violatingPilots.forEach((pilot,index) => {
+    if(pilot.phoneNumber === pilotobj.phoneNumber){
+      violatingPilots[index] = pilotobj;
+    }
+  })
 }
 
 function calculateDistanceFromNest(drone){
@@ -113,6 +122,7 @@ function getPilotInfoFrom (drone){
   //This function fetches pilot information from a pre-determined URL using a drone's serial number
   const serialNumber = drone.serialNumber;
   const url = pilotInfoBaseURL+serialNumber;
+  const timestamp = drone.timestamp;
   try {
     axios
     .get(url)
@@ -121,12 +131,13 @@ function getPilotInfoFrom (drone){
           name:res.data.firstName.toString() +" " +res.data.lastName.toString(),
           email:res.data.email.toString(),
           phoneNumber:res.data.phoneNumber.toString(),
-          distance:(calculateDistanceFromNest(drone)/1000)
+          distance:(calculateDistanceFromNest(drone)/1000),
+          violationTime: timestamp
         }
       
         if(pilot != null && pilot !== "undefined"){ 
-          if(violatingPilots.some(p => p.name === pilot.name)){ //avoiding duplicates
-            console.log('duplicate pilot!');
+          if(violatingPilots.some(p => p.phoneNumber=== pilot.phoneNumber)){ //avoiding duplicates
+            updatePilotList(pilot);
             
           }else{
             violatingPilots.push(pilot);
