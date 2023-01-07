@@ -1,11 +1,16 @@
-import axios from 'axios';
-import xml2js from "xml2js";
-import express from 'express';
-import path from 'path';
-import cors from 'cors';
-import { fileURLToPath } from 'url';
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const axios = require('axios');
+const xml2js = require('xml2js');
+const express = require('express');
+const path = require('path');
+const cors = require('cors');
+const url = require('url');
+const mongoose = require('mongoose');
+require('dotenv').config();
+const Pilot = require('./models/pilot');
+
+
+//const __filename = fileURLToPath(import.meta.url);
+//const __dirname = path.dirname(__filename);
 
 
 const dronePositionsURL = 'https://assignments.reaktor.com/birdnest/drones'; //URL for drone positions data
@@ -202,10 +207,13 @@ app.get('/api/violatingdrones',(req,res) => {
 
 app.get('/api/pilots',(req,res) => {
   //console.log(violatingPilots);
-  setTimeout(() => {
+  /*setTimeout(() => {
     res.json({"violatingPilots":violatingPilots});
   }, 1000);
-  
+  */
+  Pilot.find({}).then(pilots => {
+    res.json({"violatingPilots":pilots})
+  })
 })
 
 app.get('*',(req,res) => {
