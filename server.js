@@ -123,7 +123,7 @@ return ((d<=r)); //point is inside or on the circle if d < r or d == r
   //This function fetches pilot information from a pre-determined URL using a drone's serial number. This function also waits for response 
   const serialNumber = drone.serialNumber;
   const url = pilotInfoBaseURL+serialNumber;
-  const timestamp = drone.timestamp; //used to determine time of violation
+  const timestamp = drone.timestamp.toString().substring(11,16) //we only need hours and minutes from timestamp, e.g 2023-01-06T14:37:54.057Z; //used to determine time of violation
   try {
     const response = await axios.get(url)
     .then(res => {
@@ -132,7 +132,7 @@ return ((d<=r)); //point is inside or on the circle if d < r or d == r
           email:res.data.email.toString(),
           phoneNumber:res.data.phoneNumber.toString(),
           distance:(calculateDistanceFromNest(drone)/1000),
-          violationTime: timestamp.toString()
+          violationTime: timestamp
         }
       
         if(pilot != null && pilot !== "undefined"){ //avoiding null pointers

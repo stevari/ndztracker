@@ -5,6 +5,7 @@ import SpinnerLoading from './SpinnerLoading'
 export default function DisplayPilots() {
     const [pilotData,setpilotData] = useState([{}])
     useEffect(() => {
+      const interval = setInterval(() => {
         fetch("api/pilots")
         .then(
           response => response.json() 
@@ -14,7 +15,10 @@ export default function DisplayPilots() {
             setpilotData(data)
           }
         )
+      }, 10000);
+        return () => clearInterval(interval);
       },[])
+      
   return (
     <div style={{padding:1,borderStyle:"solid"}}>
       <h2 style={{textAlign:"center",backgroundColor:"#072a58"}}>
@@ -31,7 +35,7 @@ export default function DisplayPilots() {
       ):(
         pilotData.violatingPilots.filter(pilot => pilot != null).map(pilot => (
           <div key={pilot.name}>
-            <p>
+            <p >
               {`Offender's name: ${pilot.name}`}
               <br/>
               {`Phone number: ${pilot.phoneNumber}`}
