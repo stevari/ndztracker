@@ -20,14 +20,12 @@ const drones = []; //list of all the drones from the most recent snapshot
 const violatingDrones = []; //list of drones that violate the NDZ
 const violatingPilots = []; //list of piolts that own drones that violate the NDZ
 
- function getDrones() { 
-  //this function retrieves xml data from a source, parses the xml into json and creates objects from json
-  //then returns a list of these created objects
-
+ async function getDrones() { 
+  //this function retrieves xml data from a source, parses the xml into json and creates drone objects to be added to the drone list
   var parser = new xml2js.Parser(); //init xml to json parser
 
   try {
-    axios.get(dronePositionsURL).then(res =>{ //retrieve xml data from source
+    const response = await axios.get(dronePositionsURL).then(res =>{ //retrieve xml data from source, waiting for response
       parser.parseString(res.data,function(err,result){ //parse to json
       
        var captureObject = result.report.capture;  //json to object
@@ -41,27 +39,24 @@ const violatingPilots = []; //list of piolts that own drones that violate the ND
             positionX:drone.positionX.toString(),
             timestamp: timestamp
           };
-          //console.log(droneObject)
 
           /*Avoiding duplicates in the list by checking if a drone exists in the drones list already by using its serial number.
             if it does, update the object's values (coordinates) instead of adding it to the list, otherwise, add to list
           */
           if(foundDuplicate(drones,droneObject)){ 
-            //console.log('duplicate!');
             updateValues(drones,droneObject);
           }else{
             drones.push(droneObject); 
           }
         });
        });
-  
-      }); //pearser.parseString()
-      //console.log(droneList);
-      
-    }); //axios.get()
+
+      }); 
+
+    }); 
     
   } catch (error) {
-    console.log(error);
+    console.log("error in getDrones()"+error);
     
   }
   
@@ -87,6 +82,7 @@ function updatePilotList(pilotobj){ //same idea as the above function, but now u
 }
 
 function calculateDistanceFromNest(drone){
+  //a mathematical function to calcluate difference between points. Used in the insideNDZCircle function to determine if a drone is violating the NDZ
   let x_c = 250000.0; // point (250 000, 250 000) is where the nest is located 
   let y_c =250000.0;
   
@@ -123,36 +119,46 @@ return ((d<=r)); //point is inside or on the circle if d < r or d == r
 
 }
 
-function getPilotInfoFrom (drone){
-  //This function fetches pilot information from a pre-determined URL using a drone's serial number
+ async function getPilotInfoFrom (drone){
+  //This function fetches pilot information from a pre-determined URL using a drone's serial number. This function also waits for response 
   const serialNumber = drone.serialNumber;
   const url = pilotInfoBaseURL+serialNumber;
-  const timestamp = drone.timestamp;
+  const timestamp = drone.timestamp; //used to determine time of violation
   try {
-    axios
-    .get(url)
+    const response = await axios.get(url)
     .then(res => {
         let pilot = {
           name:res.data.firstName.toString() +" " +res.data.lastName.toString(),
           email:res.data.email.toString(),
           phoneNumber:res.data.phoneNumber.toString(),
           distance:(calculateDistanceFromNest(drone)/1000),
-          violationTime: timestamp
+          violationTime: timestamp.toString()
         }
       
-        if(pilot != null && pilot !== "undefined"){ 
+        if(pilot != null && pilot !== "undefined"){ //avoiding null pointers
           if(violatingPilots.some(p => p.phoneNumber=== pilot.phoneNumber)){ //avoiding duplicates
-            updatePilotList(pilot);
+            updatePilotList(pilot); //updates pilot info if phone number matches
+            try {
+              updatePilotInfoDatabase(pilot); //update the database also
+            } catch (error) {
+              console.log('error updating db');
+              
+            }
             
-          }else{
+          }else{ //if the pilot doesnt exist yet, add it to the list of pilots and post it to the database
             violatingPilots.push(pilot);
+            try {
+              postPilotToDatabase(pilot);
+            } catch (error) {
+              console.log('error pushing to db');
+            }
           }
           
         }
         
     })
   } catch (error) {
-    console.log(error);
+    console.log("error getting pilot info:"+error);
     
   }
 
@@ -163,57 +169,74 @@ function getPilotInfoFrom (drone){
     try {
       drones.forEach(drone =>{
         if(insideNDZcircle(drone)){
-          if(foundDuplicate(violatingDrones,drone)){ 
-            //console.log('duplicate!');
+          if(foundDuplicate(violatingDrones,drone)){ //if the drone is already in our violating list, it's probably because it has moved, so just update its pos.
             updateValues(violatingDrones,drone);
             getPilotInfoFrom(drone);
           }else{
-            violatingDrones.push(drone); 
+            violatingDrones.push(drone); //otherwise, add it to the list
             getPilotInfoFrom(drone);
           } 
       }
       });
       
     } catch (error) {
-      console.log('err'+error);
+      console.log('error in getViolatingDrones'+error);
       
     }
     
 }
+function postPilotToDatabase(targetPilot){ //posts pilot info to database
+  const pilot = new Pilot({
+    name:targetPilot.name,
+    email:targetPilot.email,
+    phoneNumber:targetPilot.phoneNumber,
+    distance:targetPilot.distance,
+    violationTime:targetPilot.violationTime
+  })
+
+  //console.log("pilot to be posted:"+pilot);
+  pilot.save().then(result =>{
+    //console.log('pilot saved to db');
+  });
+}
+
+function updatePilotInfoDatabase(targetPilot){ //updates pilot info to database
+const filter ={name:targetPilot.name};
+const update = {distance: targetPilot.distance};
+const options = {new:true};
+ Pilot.findOneAndUpdate(filter,update);
+}
+
 
 const PORT = process.env.PORT || "8080"; //port for the web server
 const app = express(); //using express library to make the server
-//NOTE TO SELF: npm run dev to use nodemon
-//Idea is to make RESTful web server
+
+
 app.use(express.static(path.resolve(__dirname, 'frontend/build'))); //serve frontend static files
 app.use(cors());
+
 app.get("/api",(req,res) => {
-  res.send("<h1>Moi maailma</h1>");
+  res.send("<h1>Empty page</h1>");
 })
 
-app.get("/api/drones",(req,res) => {
+app.get("/api/drones",(req,res) => { //get drones and get violating drones can be used in future updates where we need only this kind of data
   getDrones();
-  setTimeout(() => {
-    res.json({"drones":drones});
-  }, 500);
+  res.json({"drones":drones});
+  
 })
 
 app.get('/api/violatingdrones',(req,res) => {
   getViolatingDrones();
-  setTimeout(() => {
-    res.json({"violatingDrones":violatingDrones});
-  }, 700);
+  res.json({"violatingDrones":violatingDrones});
+  
 })
 
 app.get('/api/pilots',(req,res) => {
   //console.log(violatingPilots);
-  /*setTimeout(() => {
-    res.json({"violatingPilots":violatingPilots});
-  }, 1000);
-  */
-  Pilot.find({}).then(pilots => {
+  getDrones().then(getViolatingDrones()).then( //retrieves drone and violatingdrone data in orderder to get the latest pilot data
+  Pilot.find({}).then(pilots => { //retrieve pilot info from the database 
     res.json({"violatingPilots":pilots})
-  })
+  }))
 })
 
 app.get('*',(req,res) => {
