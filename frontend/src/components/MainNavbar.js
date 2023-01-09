@@ -4,12 +4,13 @@ import Navbar from 'react-bootstrap/Navbar';
 import NavDropdown from 'react-bootstrap/NavDropdown';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
+import {GiDeliveryDrone} from 'react-icons/gi';
 
 function MainNavbar() {
   return (
     <Navbar className='MainNavbar' variant="dark">
       <Container>
-        <Navbar.Brand href="#home"><h2>NDZ-Tracker</h2></Navbar.Brand>
+        <Navbar.Brand href="#home"><h2><GiDeliveryDrone size = "1.5em" style={{padding:1,marginRight:"1vh"}}/>NDZ-Tracker</h2></Navbar.Brand>
         <Navbar.Toggle aria-controls="responsive-navbar-nav" />
         <Navbar.Collapse id="responsive-navbar-nav">
           <Nav className="me-auto">
