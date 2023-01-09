@@ -123,6 +123,7 @@ return ((d<=r)); //point is inside or on the circle if d < r or d == r
   //This function fetches pilot information from a pre-determined URL using a drone's serial number. This function also waits for response 
   const serialNumber = drone.serialNumber;
   const url = pilotInfoBaseURL+serialNumber;
+  //const timestamp= `${Date.prototype.getMinutes()}:${Date.prototype.getSeconds()}`
   const timestamp = drone.timestamp.toString().substring(11,16) //we only need hours and minutes from timestamp, e.g 2023-01-06T14:37:54.057Z; //used to determine time of violation
   try {
     const response = await axios.get(url)
@@ -191,7 +192,8 @@ function postPilotToDatabase(targetPilot){ //posts pilot info to database
     email:targetPilot.email,
     phoneNumber:targetPilot.phoneNumber,
     distance:targetPilot.distance,
-    violationTime:targetPilot.violationTime
+    violationTime:targetPilot.violationTime,
+    createdAt:new Date()
   })
 
   //console.log("pilot to be posted:"+pilot);
@@ -202,7 +204,7 @@ function postPilotToDatabase(targetPilot){ //posts pilot info to database
 
 function updatePilotInfoDatabase(targetPilot){ //updates pilot info to database
 const filter ={name:targetPilot.name};
-const update = {distance: targetPilot.distance};
+const update = {distance: targetPilot.distance,violationTime:targetPilot.violationTime};
 const options = {new:true};
  Pilot.findOneAndUpdate(filter,update);
 }

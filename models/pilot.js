@@ -16,7 +16,8 @@ const pilotSchema = new mongoose.Schema({
   email: String,
   phoneNumber: String,
   distance: Number,
-  violationTime: String
+  violationTime: String,
+  createdAt:Date
 })
 pilotSchema.set('toJSON', {
     transform: (document, returnedObject) => {
