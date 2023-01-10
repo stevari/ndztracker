@@ -4,17 +4,32 @@ import SpinnerLoading from './SpinnerLoading'
 
 export default function DisplayPilots() {
     const [pilotData,setpilotData] = useState([{}])
-    useEffect(() => {
-      const interval = setInterval(() => {
-        fetch("api/pilots")
+
+    async function fetchData() {
+      fetch("api/pilots")
         .then(
-          response => response.json() 
+          response => {
+            if(!response.ok){
+              alert("Network error when fetching data, please try again later. Response status: "+response.status);
+            }else{
+              return response.json()
+            }
+            
+          }
         )
         .then(
           data => {
-            setpilotData(data)
+            if(data !== undefined){
+              setpilotData(data)
+            }
+            
           }
         )
+    }
+
+    useEffect(() => { //retrieves data periodically and sets the retrieved data to a statevariable called pilotData 
+      const interval = setInterval(() => {
+        fetchData();
       }, 10000);
         return () => clearInterval(interval);
       },[])
@@ -31,7 +46,7 @@ export default function DisplayPilots() {
       
       <div>
       {(typeof pilotData.violatingPilots ==='undefined'||pilotData.violatingPilots.length<1) ? (
-        <SpinnerLoading/>
+        <SpinnerLoading/> //if there is nothing to show, show a spinner
       ):(
         pilotData.violatingPilots.filter(pilot => pilot != null).map(pilot => (
           <div key={pilot.name}>
@@ -55,3 +70,5 @@ export default function DisplayPilots() {
     </div>
   )
 }
+
+
