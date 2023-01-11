@@ -110,11 +110,10 @@ https://math.stackexchange.com/questions/198764/how-to-know-if-a-point-is-inside
 
 This function return true if the drone is inside or on the circle.
 */
-let r = 100000.0;
+let r = 100000.0; //radius 100m
 
 let d = calculateDistanceFromNest(drone);
 
-//console.log(d);
 return ((d<=r)); //point is inside or on the circle if d < r or d == r
 
 }
@@ -123,8 +122,9 @@ return ((d<=r)); //point is inside or on the circle if d < r or d == r
   //This function fetches pilot information from a pre-determined URL using a drone's serial number. This function also waits for response 
   const serialNumber = drone.serialNumber;
   const url = pilotInfoBaseURL+serialNumber;
-  //const timestamp= `${Date.prototype.getMinutes()}:${Date.prototype.getSeconds()}`
-  const timestamp = drone.timestamp.toString().substring(11,16) //we only need hours and minutes from timestamp, e.g 2023-01-06T14:37:54.057Z; //used to determine time of violation
+  const date = new Date();
+  const timestamp = date.toLocaleTimeString().substring(0,5); //e.g 17:45
+  
   try {
     const response = await axios.get(url)
     .then(res => {
@@ -196,7 +196,7 @@ function postPilotToDatabase(targetPilot){ //posts pilot info to database
     createdAt:new Date()
   })
 
-  //console.log("pilot to be posted:"+pilot);
+
   pilot.save().then(result =>{
     //console.log('pilot saved to db');
   });
@@ -206,7 +206,7 @@ function updatePilotInfoDatabase(targetPilot){ //updates pilot info to database
 const filter ={name:targetPilot.name};
 const update = {distance: targetPilot.distance,violationTime:targetPilot.violationTime};
 const options = {new:true};
- Pilot.findOneAndUpdate(filter,update);
+ Pilot.findOneAndUpdate(filter,update,options);
 }
 
 
@@ -219,18 +219,6 @@ app.use(cors());
 
 app.get("/api",(req,res) => {
   res.send("<h1>Empty page</h1>");
-})
-
-app.get("/api/drones",(req,res) => { //get drones and get violating drones can be used in future updates where we need only this kind of data
-  getDrones();
-  res.json({"drones":drones});
-  
-})
-
-app.get('/api/violatingdrones',(req,res) => {
-  getViolatingDrones();
-  res.json({"violatingDrones":violatingDrones});
-  
 })
 
 app.get('/api/pilots',(req,res) => {
