@@ -122,8 +122,9 @@ return ((d<=r)); //point is inside or on the circle if d < r or d == r
   //This function fetches pilot information from a pre-determined URL using a drone's serial number. This function also waits for response 
   const serialNumber = drone.serialNumber;
   const url = pilotInfoBaseURL+serialNumber;
-  const date = new Date();
-  const timestamp = date.toLocaleTimeString().substring(0,5); //e.g 17:45
+  const timestamp = drone.timestamp.toString().substring(11,16)
+  
+  console.log('timestamp'+timestamp);
   
   try {
     const response = await axios.get(url)

@@ -87,7 +87,9 @@ function showFilteredPilots(filterData) {
   if(filterData==="undefined"||filterData===""){ //avoiding errors. We must always have some filter to sort
     filter="distance"
   }
- 
+  const currentMinutes = new Date().getMinutes();
+  //console.log('currentminutes'+currentMinutes);
+  
   return sortedPilotsBy(filter).map(pilot => ( //sort the list, then display
     <div key={pilot.name}>
       <p>
@@ -99,7 +101,7 @@ function showFilteredPilots(filterData) {
         <br />
         {`Drone's distance from nest: ${pilot.distance} meters`}
         <br />
-        {`Time of violation: ${pilot.violationTime} `}
+        {`Time of violation: ${currentMinutes - pilot.violationTime.substring(3,5)} mins ago `}
       </p>
     </div>
   ))
@@ -115,7 +117,7 @@ function sortedPilotsBy(filterData){
       case "distance":
         return pilotlist.sort((a,b) => (a.distance > b.distance) ? 1:-1); //sort by distance to the nest
       case "time":
-        return pilotlist.sort((a,b) => (a.violationTime > b.violationTime) ? 1:-1); //sort by time of violation
+        return pilotlist.sort((a,b) => (a.violationTime > b.violationTime) ? 1:-1).reverse(); //sort by time of violation
       default:
         return pilotlist.sort((a,b) => (a.distance > b.distance) ? 1:-1); //default option is to sort by distance
     }
