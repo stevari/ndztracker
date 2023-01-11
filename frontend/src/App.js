@@ -13,7 +13,7 @@ import Footer from './components/Footer'
 import "./App.css"
 export default function App() {
   const [newFilter,setNewFilter] = useState("");
-  const callback = payload => {
+  const callback = payload => { //callback function to retrieve data from child component
     setNewFilter(payload);
   }
   //NOTETOSELF remember to start server before launch
@@ -30,7 +30,7 @@ export default function App() {
 }
 
 //******DisplayPilots Component***************/
-function DisplayPilots(filterData) {
+function DisplayPilots(props) {
   const [pilotData,setpilotData] = useState([{}])
 
   async function fetchData() {
@@ -42,7 +42,6 @@ function DisplayPilots(filterData) {
           }else{
             return response.json()
           }
-          
         }
       )
       .then(
@@ -50,7 +49,6 @@ function DisplayPilots(filterData) {
           if(data !== undefined){
             setpilotData(data)
           }
-          
         }
       )
   }
@@ -58,7 +56,7 @@ function DisplayPilots(filterData) {
   useEffect(() => { //retrieves data periodically and sets the retrieved data to a statevariable called pilotData 
     const interval = setInterval(() => {
       fetchData();
-    }, 10000);
+    }, 10000); //refresh time
       return () => clearInterval(interval);
     },[])
     
@@ -76,7 +74,7 @@ return (
     {(typeof pilotData.violatingPilots ==='undefined'||pilotData.violatingPilots.length<1) ? (
       <SpinnerLoading/> //if there is nothing to show, show a spinner
     ):(
-      showFilteredPilots(filterData.filterData)
+      showFilteredPilots(props.filterData)
     )}
     </div>
 
@@ -85,11 +83,12 @@ return (
 )
 
 function showFilteredPilots(filterData) {
-  const filter = filterData;
-  //console.log('showFilteredPilots called with filter: '+filter);
-  
-  //return pilotData.violatingPilots.filter(pilot => pilot != null)
-  return sortedPilotsBy(filter).map(pilot => (
+  let filter = filterData;
+  if(filterData==="undefined"||filterData===""){ //avoiding errors. We must always have some filter to sort
+    filter="distance"
+  }
+ 
+  return sortedPilotsBy(filter).map(pilot => ( //sort the list, then display
     <div key={pilot.name}>
       <p>
         {`Offender's name: ${pilot.name}`}
@@ -107,21 +106,26 @@ function showFilteredPilots(filterData) {
 }
  
 function sortedPilotsBy(filterData){
+  //pilotlist sorting logic, returns a list of pilots
   const pilotlist =pilotData.violatingPilots;
-  switch (filterData) {
-    case "name":
-      return pilotlist.sort((a,b) => (a.name > b.name) ? 1:-1);
-      //
-    case "distance":
-      return pilotlist.sort((a,b) => (a.distance > b.distance) ? 1:-1);
-      //
-    case "time":
-      //todo
-      return pilotlist.sort((a,b) => (a.violationTime > b.violationTime) ? 1:-1);
-    default:
-      return pilotlist.sort((a,b) => (a.distance > b.distance) ? 1:-1);
+  if(filterData==="name"||filterData==="distance"||filterData==="time"){
+    switch (filterData) {
+      case "name":
+        return pilotlist.sort((a,b) => (a.name > b.name) ? 1:-1); //sort by name
+      case "distance":
+        return pilotlist.sort((a,b) => (a.distance > b.distance) ? 1:-1); //sort by distance to the nest
+      case "time":
+        return pilotlist.sort((a,b) => (a.violationTime > b.violationTime) ? 1:-1); //sort by time of violation
+      default:
+        return pilotlist.sort((a,b) => (a.distance > b.distance) ? 1:-1); //default option is to sort by distance
+    }
+    
+  }else{
+    //if the filterdata variable is not one of the three sorting types, it has to be a search filter
+    //return a new list inlucing only the pilots who's name includes the search filter
+    return pilotlist.filter(pilot => pilot.name.toLocaleLowerCase().includes(filterData)); 
   }
-  
+ 
   
 }
 }
@@ -129,9 +133,14 @@ function sortedPilotsBy(filterData){
 
 //******MainNavBar Component***************/
 function MainNavbar({callback}) {
-  //const [newFilter,setNewFilter] = useState("");
-  const handleCallback = (value) => callback(value);
-
+  //navbar component that can be used for sorting pilot list and searching for specific pilots 
+  const [newSearchFilter,setNewSearchFilter] = useState("");
+  /*handleCallback sends sorting/search filter to parent component (App), 
+    to be send forward to the displayer component. It accepts a string as a parameter
+    which is either one of the three sorting options or a string of characters that could
+    exist in a pilots name
+  */
+  const handleCallback = (value) => callback(value); 
 
   return (
     <Navbar className='MainNavbar' variant="dark" style={{backgroundColor:"#05244d"}}>
@@ -150,11 +159,14 @@ function MainNavbar({callback}) {
           <Form className="d-flex">
             <Form.Control
               type="search"
-              placeholder="Search pilots"
+              placeholder="Search by name"
               className="me-2"
               aria-label="Search"
+              onChange={(event) => setNewSearchFilter(event.target.value)}
+              value={newSearchFilter}
             />
-            <Button >Search</Button>
+            
+            <Button onClick={()=>handleCallback(newSearchFilter)}>Search</Button>
           </Form>
         </Navbar.Collapse>
       </Container>
