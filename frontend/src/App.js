@@ -91,7 +91,7 @@ function showFilteredPilots(filterData) {
   //console.log('currentminutes'+currentMinutes);
   
   return sortedPilotsBy(filter).map(pilot => ( //sort the list, then display
-    <div key={pilot.name}>
+    <div key={pilot.id}>
       <p>
         {`Offender's name: ${pilot.name}`}
         <br />
@@ -106,7 +106,7 @@ function showFilteredPilots(filterData) {
     </div>
   ))
 }
- 
+
 function sortedPilotsBy(filterData){
   //pilotlist sorting logic, returns a list of pilots
   const pilotlist =pilotData.violatingPilots;
@@ -142,7 +142,12 @@ function MainNavbar({callback}) {
     which is either one of the three sorting options or a string of characters that could
     exist in a pilots name
   */
+
   const handleCallback = (value) => callback(value); 
+  
+  useEffect(() => {
+    handleCallback(newSearchFilter);
+ },[newSearchFilter]);
 
   return (
     <Navbar className='MainNavbar' variant="dark" style={{backgroundColor:"#05244d"}}>
@@ -164,7 +169,7 @@ function MainNavbar({callback}) {
               placeholder="Search by name"
               className="me-2"
               aria-label="Search"
-              onChange={(event) => setNewSearchFilter(event.target.value)}
+              onChange={(event) => setNewSearchFilter(event.target.value.toLocaleLowerCase())}
               value={newSearchFilter}
             />
             

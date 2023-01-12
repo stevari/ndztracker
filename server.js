@@ -124,7 +124,7 @@ return ((d<=r)); //point is inside or on the circle if d < r or d == r
   const url = pilotInfoBaseURL+serialNumber;
   const timestamp = drone.timestamp.toString().substring(11,16)
   
-  console.log('timestamp'+timestamp);
+  //console.log('timestamp'+timestamp);
   
   try {
     const response = await axios.get(url)
@@ -206,7 +206,7 @@ function postPilotToDatabase(targetPilot){ //posts pilot info to database
 function updatePilotInfoDatabase(targetPilot){ //updates pilot info to database
 const filter ={name:targetPilot.name};
 const update = {distance: targetPilot.distance,violationTime:targetPilot.violationTime};
-const options = {new:true};
+const options = {new:false};
  Pilot.findOneAndUpdate(filter,update,options);
 }
 
