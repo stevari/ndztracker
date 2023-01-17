@@ -56,7 +56,7 @@ function DisplayPilots(props) {
   useEffect(() => { //retrieves data periodically and sets the retrieved data to a statevariable called pilotData 
     const interval = setInterval(() => {
       fetchData();
-    }, 10000); //refresh time
+    }, 5000); //refresh time
       return () => clearInterval(interval);
     },[])
     
