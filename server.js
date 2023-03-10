@@ -7,10 +7,12 @@ const url = require('url');
 const mongoose = require('mongoose');
 require('dotenv').config();
 const Pilot = require('./models/pilot');
+const WebSocket = require('ws');
 
-
-//const __filename = fileURLToPath(import.meta.url);
-//const __dirname = path.dirname(__filename);
+const wss = new WebSocket.Server({ port: 8081 }); 
+wss.on('connection', function connection(ws) {
+  console.log('Client connected');
+});
 
 
 const dronePositionsURL = 'https://assignments.reaktor.com/birdnest/drones'; //URL for drone positions data
@@ -213,22 +215,24 @@ const options = {new:false};
 
 const PORT = process.env.PORT || "8080"; //port for the web server
 const app = express(); //using express library to make the server
-
+//IMPLEMENT WEBSOCKETS
 
 app.use(express.static(path.resolve(__dirname, 'frontend/build'))); //serve frontend static files
 app.use(cors());
 
-app.get("/api",(req,res) => {
-  res.send("<h1>Empty page</h1>");
-})
-
-app.get('/api/pilots',(req,res) => {
-  //console.log(violatingPilots);
-  getDrones().then(getViolatingDrones()).then( //retrieves drone and violatingdrone data in orderder to get the latest pilot data
-  Pilot.find({}).then(pilots => { //retrieve pilot info from the database 
-    res.json({"violatingPilots":pilots})
-  }))
-})
+function sendPilotDataToClient(){
+  getDrones().then(getViolatingDrones()).then(
+    Pilot.find({}).then(pilots => { //retrives pilots from the db
+      wss.clients.forEach((client) => {
+        if (client.readyState === WebSocket.OPEN) {
+          const jsonData = JSON.stringify(pilots);
+          client.send(jsonData);
+        }
+      });
+    })
+  )
+}
+setInterval(sendPilotDataToClient,5000); //retrieves data every 5 seconds
 
 app.get('*',(req,res) => {
   //console.log(__dirname);

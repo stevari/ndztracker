@@ -9,6 +9,7 @@ import {GiDeliveryDrone} from 'react-icons/gi';
 import { useState,useEffect } from 'react'
 import SpinnerLoading from './components/SpinnerLoading'
 
+
 import Footer from './components/Footer'
 import "./App.css"
 export default function App() {
@@ -16,7 +17,6 @@ export default function App() {
   const callback = payload => { //callback function to retrieve data from child component
     setNewFilter(payload);
   }
-  //NOTETOSELF remember to start server before launch
 
   return (
     <div className='App'>
@@ -31,37 +31,27 @@ export default function App() {
 
 //******DisplayPilots Component***************/
 function DisplayPilots(props) {
-  const [pilotData,setpilotData] = useState([{}])
+  const [pilotData,setPilotData] = useState([])
 
-  async function fetchData() {
-    fetch("api/pilots")
-      .then(
-        response => {
-          if(!response.ok){
-            alert("Network error when fetching data, please try again later. Response status: "+response.status);
-          }else{
-            return response.json()
-          }
-        }
-      )
-      .then(
-        data => {
-          if(data !== undefined){
-            setpilotData(data)
-          }
-        }
-      )
-  }
-
-  useEffect(() => { //retrieves data periodically and sets the retrieved data to a statevariable called pilotData 
-    const interval = setInterval(() => {
-      fetchData();
-    }, 5000); //refresh time
-      return () => clearInterval(interval);
-    },[])
+  useEffect(() => {
+    const ws = new WebSocket('ws://localhost:8081');
+    ws.onopen = () => {
+      console.log('Connected to server');
+    };
+    ws.onmessage = (event) => {
+      //console.log('Received: ', event.data);
+      const jsonData = JSON.parse(event.data);
+      setPilotData(jsonData);
+    };
+    return () => {
+      ws.close();
+    };
+  }, []);
     
 return (
+  
   <div style={{padding:1,borderStyle:"solid"}}>
+    
     <h2 style={{textAlign:"center",backgroundColor:"#072a58"}}>
         Violating pilots:
       </h2>
@@ -71,7 +61,7 @@ return (
   <div style={{textAlign:"center",overflowY:"scroll",height:"91vh"}}>
     
     <div>
-    {(typeof pilotData.violatingPilots ==='undefined'||pilotData.violatingPilots.length<1) ? (
+    {(typeof pilotData ==='undefined'||pilotData.length<1) ? (
       <SpinnerLoading/> //if there is nothing to show, show a spinner
     ):(
       showFilteredPilots(props.filterData)
@@ -87,7 +77,6 @@ function showFilteredPilots(filterData) {
   if(filterData==="undefined"||filterData===""){ //avoiding errors. We must always have some filter to sort
     filter="distance"
   }
-  const currentMinutes = new Date().getMinutes();
   //console.log('currentminutes'+currentMinutes);
   
   return sortedPilotsBy(filter).map(pilot => ( //sort the list, then display
@@ -101,7 +90,7 @@ function showFilteredPilots(filterData) {
         <br />
         {`Drone's distance from nest: ${pilot.distance} meters`}
         <br />
-        {`Time of violation: ${currentMinutes - pilot.violationTime.substring(3,5)} mins ago `}
+        {`Time of violation: ${pilot.violationTime}`}
       </p>
     </div>
   ))
@@ -109,7 +98,7 @@ function showFilteredPilots(filterData) {
 
 function sortedPilotsBy(filterData){
   //pilotlist sorting logic, returns a list of pilots
-  const pilotlist =pilotData.violatingPilots;
+  const pilotlist =pilotData;
   if(filterData==="name"||filterData==="distance"||filterData==="time"){
     switch (filterData) {
       case "name":
