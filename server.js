@@ -9,10 +9,6 @@ require('dotenv').config();
 const Pilot = require('./models/pilot');
 const WebSocket = require('ws');
 
-const wss = new WebSocket.Server({ port: 8081 }); 
-wss.on('connection', function connection(ws) {
-  console.log('Client connected');
-});
 
 
 const dronePositionsURL = 'https://assignments.reaktor.com/birdnest/drones'; //URL for drone positions data
@@ -240,5 +236,9 @@ app.get('*',(req,res) => {
   res.sendFile(path.resolve(__dirname,'frontend/build','index.html'));
 })
 
-app.listen(PORT);
+const wss=new WebSocket.Server({ server:app.listen(PORT) });
+wss.on('connection', function connection(ws) {
+  console.log('Client connected');
+});
+
 console.log(`Server running on port ${PORT}`);

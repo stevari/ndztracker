@@ -34,7 +34,7 @@ function DisplayPilots(props) {
   const [pilotData,setPilotData] = useState([])
 
   useEffect(() => {
-    const ws = new WebSocket('ws://localhost:8081');
+    const ws = new WebSocket('ws://localhost:8080');
     ws.onopen = () => {
       console.log('Connected to server');
     };
